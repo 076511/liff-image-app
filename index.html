@@ -40,51 +40,44 @@
 
   <img id="preview" alt="プレビュー" />
 
-  <script>
-    // ★ あなたのLIFF ID をここに入れる！
-    const liffId = "2008124621-9gEeG5K6";
+ <script>
+  const liffId = "2008124621-9gEeG5K6";
+  const gasUrl = "https://script.google.com/macros/s/AKfycbw9rcof4lpIbyxC23ceuGP3Nm45KSpv3i-tipzrgtSXv2ziXxqt1nkwJCouPrqtYzZpEw/exec";
 
-    async function main() {
-      await liff.init({ liffId });
+  async function main() {
+    await liff.init({ liffId });
 
-      if (!liff.isLoggedIn()) {
-        document.getElementById("loginBtn").onclick = () => liff.login();
-      } else {
-        document.getElementById("loginBtn").style.display = "none";
-        const profile = await liff.getProfile();
-        document.getElementById("profile").innerHTML =
-          "こんにちは、" + profile.displayName + " さん！";
-      }
+    // ログイン処理
+    if (!liff.isLoggedIn()) {
+      document.getElementById("loginBtn").onclick = () => liff.login();
+    } else {
+      document.getElementById("loginBtn").style.display = "none";
+      const profile = await liff.getProfile();
+      document.getElementById("profile").innerHTML =
+        "こんにちは、" + profile.displayName + " さん！";
     }
 
-    // 画像選択プレビュー
-    document.getElementById("fileInput").addEventListener("change", e => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          document.getElementById("preview").src = evt.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    });
+    // ✅ ボタンイベントは main() 内で設定する
+    document.getElementById("uploadBtn").addEventListener("click", uploadFile);
+  }
 
-    // 画像をGASに送信
-    document.getElementById("uploadBtn").addEventListener("click", async () => {
-      const file = document.getElementById("fileInput").files[0];
-      if (!file) {
-        alert("画像を選択してください");
-        return;
-      }
+  // アップロード処理
+  async function uploadFile() {
+    const fileInput = document.getElementById("fileInput");
+    const file = fileInput.files[0];
 
-      const reader = new FileReader();
-      reader.onload = async function(evt) {
-        const base64 = evt.target.result.split(",")[1];
+    if (!file) {
+      alert("画像を選択してください");
+      return;
+    }
 
-        // ★ あなたのGAS WebアプリURL をここに入れる！
-        const url = "https://script.google.com/macros/s/AKfycbw9rcof4lpIbyxC23ceuGP3Nm45KSpv3i-tipzrgtSXv2ziXxqt1nkwJCouPrqtYzZpEw/exec";
+    // ファイル読み込み
+    const reader = new FileReader();
+    reader.onload = async function(evt) {
+      const base64 = evt.target.result.split(",")[1];
 
-        const res = await fetch(url, {
+      try {
+        const res = await fetch(gasUrl, {
           method: "POST",
           body: JSON.stringify({
             image: base64,
@@ -94,12 +87,16 @@
         });
 
         const result = await res.text();
-        alert("アップロード結果: " + result);
-      };
-      reader.readAsDataURL(file);
-    });
+        alert("アップロード成功: " + result);
+      } catch (err) {
+        alert("エラー: " + err.message);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
 
-    main();
-  </script>
+  // ページロード後に実行
+  window.onload = main;
+</script>
 </body>
 </html>
