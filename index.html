@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>LIFF Sample</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <h1>LIFFテスト</h1>
+  <button id="loginBtn">ログイン</button>
+  <div id="profile"></div>
+
+  <script>
+    async function main() {
+      await liff.init({ liffId: "【あなたのLIFF ID】" });
+
+      if (!liff.isLoggedIn()) {
+        document.getElementById("loginBtn").onclick = () => liff.login();
+      } else {
+        const profile = await liff.getProfile();
+        document.getElementById("profile").innerHTML =
+          "こんにちは、" + profile.displayName + " さん！";
+      }
+    }
+    main();
+  </script>
+</body>
+</html>
