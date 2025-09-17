@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LIFF 画像保存アプリ</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>📂 学校用画像保存アプリ</h1>
+  <p>LINEログイン後、画像を選んで保存できます</p>
+
+  <button id="loginBtn">LINEログイン</button>
+  <div id="profile"></div>
+
+  <input type="file" id="fileInput" accept="image/*">
+  <button id="uploadBtn">アップロード</button>
+
+  <img id="preview" alt="プレビュー" />
+
+  <script>
+    const liffId = "ここにあなたのLIFF IDを入力";
+
+    async function main() {
+      await liff.init({ liffId });
+
+      if (!liff.isLoggedIn()) {
+        document.getElementById("loginBtn").onclick = () => liff.login();
+      } else {
+        document.getElementById("loginBtn").style.display = "none";
+        const profile = await liff.getProfile();
+        document.getElementById("profile").innerHTML =
+          "こんにちは、" + profile.displayName + " さん！";
+      }
+    }
+
+    document.getElementById("fileInput").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById("preview").src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.getElementById("uploadBtn").addEventListener("click", async () => {
+      const file = document.getElementById("fileInput").files[0];
+      if (!file) {
+        alert("画像を選択してください");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async function(evt) {
+        const base64 = evt.target.result.split(",")[1];
+        const url = "https://script.google.com/macros/s/【GASデプロイURL】/exec";
+
+        const res = await fetch(url, {
+          method: "POST",
+          body: JSON.stringify({
+            image: base64,
+            filename: file.name
+          }),
+          headers: { "Content-Type": "application/json" }
+        });
+
+        const result = await res.text();
+        alert("アップロード結果: " + result);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    main();
+  </script>
+</body>
+</html>
