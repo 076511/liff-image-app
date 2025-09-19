@@ -2,76 +2,56 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <link rel="stylesheet" href="style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LIFF 画像保存アプリ</title>
+  <title>📂 学校用画像保存アプリ</title>
+  <link rel="stylesheet" href="style.css">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      text-align: center;
-    }
-    button {
-      margin: 10px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      background: #06c755;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    #preview {
-      margin-top: 20px;
-      max-width: 100%;
-    }
-  </style>
 </head>
 <body>
-  <h1>📂 学校用画像保存アプリ</h1>
-  <p>LINEログイン後、画像を選んで保存できます</p>
+  <div class="container">
+    <h1>📂 学校用画像保存アプリ</h1>
+    <p>LINEログイン後、画像を選んでアップロードできます</p>
 
-  <button id="loginBtn">LINEログイン</button>
-  <div id="profile"></div>
+    <button id="loginBtn">LINEログイン</button>
+    <div id="profile"></div>
 
-  <input type="file" id="fileInput" accept="image/*">
-  <button id="uploadBtn">アップロード</button>
+    <input type="file" id="fileInput" accept="image/*">
+    <button id="uploadBtn">アップロード</button>
 
-  <img id="preview" alt="プレビュー" />
+    <img id="preview" alt="プレビュー" />
+    <div id="status"></div>
+  </div>
 
- <script>
-  const liffId = "2008124621-9gEeG5K6";
-  const gasUrl = "https://script.google.com/macros/s/AKfycbw9rcof4lpIbyxC23ceuGP3Nm45KSpv3i-tipzrgtSXv2ziXxqt1nkwJCouPrqtYzZpEw/exec";
+<script>
+  const liffId = 2008124621-9gEeG5K6; // 新アカウントのLIFF ID
+  const gasUrl = "https://script.google.com/macros/s/1pg9yc-5BSUjiQj-4xjEsGZE68pQ4jqBacNTvOAFs9XJ3gaQJNXQG2Lpc/exec"; // 新アカウントGAS
 
   async function main() {
     await liff.init({ liffId });
 
-    // ログイン処理
+    // LINEログイン
     if (!liff.isLoggedIn()) {
       document.getElementById("loginBtn").onclick = () => liff.login();
     } else {
       document.getElementById("loginBtn").style.display = "none";
       const profile = await liff.getProfile();
-      document.getElementById("profile").innerHTML =
+      document.getElementById("profile").innerHTML = 
         "こんにちは、" + profile.displayName + " さん！";
     }
 
-    // ✅ ボタンイベントは main() 内で設定する
+    // アップロードボタン設定
     document.getElementById("uploadBtn").addEventListener("click", uploadFile);
   }
 
-  // アップロード処理
   async function uploadFile() {
     const fileInput = document.getElementById("fileInput");
     const file = fileInput.files[0];
+    if (!file) return alert("画像を選択してください");
 
-    if (!file) {
-      alert("画像を選択してください");
-      return;
-    }
+    // プレビュー
+    const preview = document.getElementById("preview");
+    preview.src = URL.createObjectURL(file);
 
-    // ファイル読み込み
     const reader = new FileReader();
     reader.onload = async function(evt) {
       const base64 = evt.target.result.split(",")[1];
@@ -81,21 +61,21 @@
           method: "POST",
           body: JSON.stringify({
             image: base64,
-            filename: file.name
+            filename: file.name,
+            contentType: file.type
           }),
           headers: { "Content-Type": "application/json" }
         });
 
         const result = await res.text();
-        alert("アップロード成功: " + result);
+        document.getElementById("status").innerText = "アップロード結果: " + result;
       } catch (err) {
-        alert("エラー: " + err.message);
+        document.getElementById("status").innerText = "エラー: " + err.message;
       }
     };
     reader.readAsDataURL(file);
   }
 
-  // ページロード後に実行
   window.onload = main;
 </script>
 </body>
