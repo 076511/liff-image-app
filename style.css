@@ -1,79 +1,58 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LIFF 画像保存アプリ</title>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <h1>📂 学校用画像保存アプリ</h1>
-  <p>LINEログイン後、画像を選んで保存できます</p>
+body {
+  font-family: sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+}
 
-  <button id="loginBtn">LINEログイン</button>
-  <div id="profile"></div>
+.container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
 
-  <input type="file" id="fileInput" accept="image/*">
-  <button id="uploadBtn">アップロード</button>
+h1 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
 
-  <img id="preview" alt="プレビュー" />
+p {
+  font-size: 14px;
+  margin-bottom: 20px;
+}
 
-  <script>
-    const liffId = "ここにあなたのLIFF IDを入力";
+button {
+  margin: 10px 0;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background: #06c755;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
 
-    async function main() {
-      await liff.init({ liffId });
+button:hover {
+  background: #049e4c;
+}
 
-      if (!liff.isLoggedIn()) {
-        document.getElementById("loginBtn").onclick = () => liff.login();
-      } else {
-        document.getElementById("loginBtn").style.display = "none";
-        const profile = await liff.getProfile();
-        document.getElementById("profile").innerHTML =
-          "こんにちは、" + profile.displayName + " さん！";
-      }
-    }
+#fileInput {
+  margin: 10px 0;
+}
 
-    document.getElementById("fileInput").addEventListener("change", e => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          document.getElementById("preview").src = evt.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    });
+#preview {
+  margin-top: 20px;
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
 
-    document.getElementById("uploadBtn").addEventListener("click", async () => {
-      const file = document.getElementById("fileInput").files[0];
-      if (!file) {
-        alert("画像を選択してください");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = async function(evt) {
-        const base64 = evt.target.result.split(",")[1];
-        const url = "https://script.google.com/macros/s/【GASデプロイURL】/exec";
-
-        const res = await fetch(url, {
-          method: "POST",
-          body: JSON.stringify({
-            image: base64,
-            filename: file.name
-          }),
-          headers: { "Content-Type": "application/json" }
-        });
-
-        const result = await res.text();
-        alert("アップロード結果: " + result);
-      };
-      reader.readAsDataURL(file);
-    });
-
-    main();
-  </script>
-</body>
-</html>
+#status {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #333;
+}
