@@ -10,19 +10,26 @@
 <body>
   <header>📂 学校用 画像保存アプリ</header>
   <main>
+    <!-- ログイン -->
     <button id="loginBtn">LINEログイン</button>
+    <button id="logoutBtn" style="display:none;">ログアウト</button>
     <div id="profile"></div>
 
+    <!-- アップロード -->
     <input type="file" id="fileInput" accept="image/*">
     <button id="uploadBtn">アップロード</button>
-
     <img id="preview" alt="プレビュー" />
+
+    <!-- 履歴 -->
+    <h2>📜 アップロード履歴</h2>
+    <ul id="historyList"></ul>
   </main>
   <footer>© 2025 学校アプリ</footer>
 
   <script>
-    const liffId = "2008124621-9gEeG5K6";  
-    const gasUrl = "https://script.google.com/u/1/home/projects/1pg9yc-5BSUjiQj-4xjEsGZE68pQ4jqBacNTvOAFs9XJ3gaQJNXQG2Lpc/edit?hl=ja";
+    // ✅ あなたの環境に合わせて書き換える
+    const liffId = "2008124621-9gEeG5K6";  // ← LIFF ID
+    const gasUrl = "https://script.google.com/macros/s/AKfycbxXXXXXXXXXXXXXXX/exec"; // ← GAS公開URL
 
     async function main() {
       await liff.init({ liffId });
@@ -31,12 +38,20 @@
         document.getElementById("loginBtn").onclick = () => liff.login();
       } else {
         document.getElementById("loginBtn").style.display = "none";
+        document.getElementById("logoutBtn").style.display = "inline-block";
+
         const profile = await liff.getProfile();
         document.getElementById("profile").innerHTML =
           "こんにちは、" + profile.displayName + " さん！";
-        // ユーザーIDを保持（GASに送る用）
         window.currentUserId = profile.userId;
+
+        loadHistory();
       }
+
+      document.getElementById("logoutBtn").onclick = () => {
+        liff.logout();
+        location.reload();
+      };
 
       document.getElementById("uploadBtn").addEventListener("click", uploadFile);
     }
@@ -49,8 +64,7 @@
         return;
       }
 
-      const preview = document.getElementById("preview");
-      preview.src = URL.createObjectURL(file);
+      document.getElementById("preview").src = URL.createObjectURL(file);
 
       const reader = new FileReader();
       reader.onload = async function(evt) {
@@ -60,6 +74,7 @@
           const res = await fetch(gasUrl, {
             method: "POST",
             body: JSON.stringify({
+              mode: "upload",
               image: base64,
               filename: file.name,
               contentType: file.type,
@@ -71,6 +86,7 @@
           const result = await res.json();
           if (result.status === "success") {
             alert("アップロード成功！");
+            loadHistory();
           } else {
             alert("エラー: " + result.message);
           }
@@ -79,6 +95,23 @@
         }
       };
       reader.readAsDataURL(file);
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch(gasUrl + "?mode=history&userId=" + window.currentUserId);
+        const data = await res.json();
+
+        const list = document.getElementById("historyList");
+        list.innerHTML = "";
+        data.forEach(row => {
+          const li = document.createElement("li");
+          li.innerHTML = `<a href="${row.fileUrl}" target="_blank">${row.fileName}</a> (${row.createdAt})`;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        console.error("履歴読み込みエラー:", err);
+      }
     }
 
     window.onload = main;
