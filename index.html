@@ -5,10 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>学校用 画像保存アプリ</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
   <header>📂 学校用 画像保存アプリ</header>
   <main>
+    <!-- ログイン -->
+    <button id="loginBtn">LINEログイン</button>
+    <button id="logoutBtn" style="display:none;">ログアウト</button>
+    <div id="profile"></div>
+
     <!-- アップロード -->
     <input type="file" id="fileInput" accept="image/*">
     <button id="uploadBtn">アップロード</button>
@@ -20,69 +26,6 @@
   </main>
   <footer>© 2025 学校アプリ</footer>
 
-  <script>
-    // ✅ あなたの GAS 公開URLに置き換える
-    const gasUrl = "https://script.google.com/macros/s/AKfycbzhfoCEOuZFOY5eDbkX34OOsH4pTwx6wEaYGPRQBfeTFgomdQgsS3LKIonXXcrYxqXj4w/exec";
-
-    document.getElementById("uploadBtn").addEventListener("click", uploadFile);
-
-    async function uploadFile() {
-      const fileInput = document.getElementById("fileInput");
-      const file = fileInput.files[0];
-      if (!file) {
-        alert("画像を選択してください");
-        return;
-      }
-
-      document.getElementById("preview").src = URL.createObjectURL(file);
-
-      const reader = new FileReader();
-      reader.onload = async function(evt) {
-        const base64 = evt.target.result.split(",")[1];
-
-        try {
-          const res = await fetch(gasUrl, {
-            method: "POST",
-            body: JSON.stringify({
-              mode: "upload",
-              image: base64,
-              filename: file.name,
-              contentType: file.type
-            }),
-            headers: { "Content-Type": "application/json" },
-            credentials: "include"   // ✅ GoogleアカウントのCookieを送信
-          });
-
-          const result = await res.json();
-          if (result.status === "success") {
-            alert("アップロード成功！");
-            loadHistory();
-          } else {
-            alert("エラー: " + result.message);
-          }
-        } catch (err) {
-          alert("通信エラー: " + err.message);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-
-    async function loadHistory() {
-      try {
-        const res = await fetch(gasUrl + "?mode=history", { credentials: "include" });
-        const data = await res.json();
-
-        const list = document.getElementById("historyList");
-        list.innerHTML = "";
-        data.forEach(row => {
-          const li = document.createElement("li");
-          li.innerHTML = `<a href="${row.fileUrl}" target="_blank">${row.fileName}</a> (${row.createdAt})`;
-          list.appendChild(li);
-        });
-      } catch (err) {
-        console.error("履歴読み込みエラー:", err);
-      }
-    }
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
