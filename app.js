@@ -1,5 +1,5 @@
 // === あなたの環境に合わせて設定 ===
-const liffId = "あなたのLIFF_ID";
+const liffId = "2008124621-9gEeG5K6";
 const gasUrl = "https://script.google.com/macros/s/あなたのGASデプロイID/exec"; // 公開URL
 
 async function main() {
