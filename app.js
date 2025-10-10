@@ -1,4 +1,3 @@
-// === あなたの環境に合わせて設定 ===
 const liffId = "2008124621-9gEeG5K6";
 const gasUrl = "https://script.google.com/macros/s/AKfycbzZE4yzQAzYCqhiZOrowGhKuPGhor1hQwCa4weEGdhG-yRvygAWubZsfEuFxqQsP4HNwA/exec";
 
@@ -12,8 +11,7 @@ async function main() {
     document.getElementById("logoutBtn").style.display = "inline-block";
 
     const profile = await liff.getProfile();
-    document.getElementById("profile").innerHTML =
-      `こんにちは、${profile.displayName} さん！`;
+    document.getElementById("profile").innerHTML = `こんにちは、${profile.displayName} さん！`;
     window.currentUserId = profile.userId;
 
     loadHistory();
@@ -27,22 +25,25 @@ async function main() {
   document.getElementById("uploadBtn").addEventListener("click", uploadFile);
 }
 
-// === 画像アップロード ===
 async function uploadFile() {
   const file = document.getElementById("fileInput").files[0];
   if (!file) return alert("画像を選択してください。");
 
   document.getElementById("preview").src = URL.createObjectURL(file);
 
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("userId", window.currentUserId);
-  formData.append("mode", "upload");
+  const base64 = await toBase64(file);
 
   try {
     const res = await fetch(gasUrl, {
       method: "POST",
-      body: formData,
+      body: JSON.stringify({
+        mode: "upload",
+        userId: window.currentUserId,
+        filename: file.name,
+        image: base64.split(",")[1],
+        contentType: file.type
+      }),
+      headers: { "Content-Type": "application/json" }
     });
 
     const result = await res.json();
@@ -50,22 +51,28 @@ async function uploadFile() {
       alert("✅ アップロード成功！");
       loadHistory();
     } else {
-      alert("❌ エラー: " + result.message);
+      alert("⚠ エラー: " + result.message);
     }
   } catch (err) {
-    alert("⚠️ 通信エラー: " + err.message);
+    alert("通信エラー: " + err.message);
   }
 }
 
-// === 履歴取得 ===
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 async function loadHistory() {
   try {
     const res = await fetch(`${gasUrl}?mode=history&userId=${window.currentUserId}`);
     const data = await res.json();
-
     const list = document.getElementById("historyList");
     list.innerHTML = "";
-
     data.forEach(row => {
       const li = document.createElement("li");
       li.innerHTML = `<a href="${row.fileUrl}" target="_blank">${row.fileName}</a> (${row.createdAt})`;
