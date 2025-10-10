@@ -1,6 +1,6 @@
 // === あなたの環境に合わせて設定 ===
 const liffId = "2008124621-9gEeG5K6";
-const gasUrl = "https://script.google.com/macros/s/AKfycbzZE4yzQAzYCqhiZOrowGhKuPGhor1hQwCa4weEGdhG-yRvygAWubZsfEuFxqQsP4HNwA/exec"; // 公開URL
+const gasUrl = "https://script.google.com/macros/s/AKfycbzZE4yzQAzYCqhiZOrowGhKuPGhor1hQwCa4weEGdhG-yRvygAWubZsfEuFxqQsP4HNwA/exec";
 
 async function main() {
   await liff.init({ liffId });
@@ -34,37 +34,30 @@ async function uploadFile() {
 
   document.getElementById("preview").src = URL.createObjectURL(file);
 
-  // Base64エンコードしてGASに送信
-  const reader = new FileReader();
-  reader.onload = async () => {
-    const base64Data = reader.result.split(",")[1];
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("userId", window.currentUserId);
+  formData.append("mode", "upload");
 
-    try {
-      await fetch(gasUrl, {
-        method: "POST",
-        mode: "no-cors", // 🔥 CORS回避（レスポンス読めないけど送信OK）
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mode: "upload",
-          image: base64Data,
-          filename: file.name,
-          contentType: file.type,
-          userId: window.currentUserId,
-        }),
-      });
+  try {
+    const res = await fetch(gasUrl, {
+      method: "POST",
+      body: formData,
+    });
 
-      alert("✅ 画像を送信しました！（数秒後に反映されます）");
-      setTimeout(loadHistory, 3000); // 少し待ってから履歴再読込
-    } catch (err) {
-      alert("通信エラー: " + err.message);
+    const result = await res.json();
+    if (result.status === "success") {
+      alert("✅ アップロード成功！");
+      loadHistory();
+    } else {
+      alert("❌ エラー: " + result.message);
     }
-  };
-  reader.readAsDataURL(file);
+  } catch (err) {
+    alert("⚠️ 通信エラー: " + err.message);
+  }
 }
 
-// === アップロード履歴取得 ===
+// === 履歴取得 ===
 async function loadHistory() {
   try {
     const res = await fetch(`${gasUrl}?mode=history&userId=${window.currentUserId}`);
