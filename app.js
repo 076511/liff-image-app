@@ -27,41 +27,52 @@ async function main() {
   document.getElementById("uploadBtn").addEventListener("click", uploadFile);
 }
 
+// === 画像アップロード ===
 async function uploadFile() {
   const file = document.getElementById("fileInput").files[0];
   if (!file) return alert("画像を選択してください。");
 
   document.getElementById("preview").src = URL.createObjectURL(file);
 
-  const formData = new FormData();
-  formData.append("mode", "upload");
-  formData.append("file", file);
-  formData.append("userId", window.currentUserId);
+  // Base64エンコードしてGASに送信
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const base64Data = reader.result.split(",")[1];
 
-  try {
-    const res = await fetch(gasUrl, {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      await fetch(gasUrl, {
+        method: "POST",
+        mode: "no-cors", // 🔥 CORS回避（レスポンス読めないけど送信OK）
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mode: "upload",
+          image: base64Data,
+          filename: file.name,
+          contentType: file.type,
+          userId: window.currentUserId,
+        }),
+      });
 
-    const result = await res.json();
-    if (result.status === "success") {
-      alert("アップロード成功！");
-      loadHistory();
-    } else {
-      alert("エラー: " + result.message);
+      alert("✅ 画像を送信しました！（数秒後に反映されます）");
+      setTimeout(loadHistory, 3000); // 少し待ってから履歴再読込
+    } catch (err) {
+      alert("通信エラー: " + err.message);
     }
-  } catch (err) {
-    alert("通信エラー: " + err.message);
-  }
+  };
+  reader.readAsDataURL(file);
 }
 
+// === アップロード履歴取得 ===
 async function loadHistory() {
   try {
     const res = await fetch(`${gasUrl}?mode=history&userId=${window.currentUserId}`);
     const data = await res.json();
+
     const list = document.getElementById("historyList");
     list.innerHTML = "";
+
     data.forEach(row => {
       const li = document.createElement("li");
       li.innerHTML = `<a href="${row.fileUrl}" target="_blank">${row.fileName}</a> (${row.createdAt})`;
