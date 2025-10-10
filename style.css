@@ -1,36 +1,25 @@
 body {
-  font-family: "Hiragino Sans", sans-serif;
-  padding: 20px;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f4f6f8;
+  color: #333;
   text-align: center;
-  background: #f9f9f9;
+  padding: 20px;
 }
-header, footer {
-  background: #06c755;
-  color: white;
-  padding: 10px;
-  border-radius: 6px;
+
+h1 {
+  color: #007BFF;
 }
+
 button {
-  margin: 10px;
-  padding: 10px 20px;
+  margin: 8px;
+  padding: 8px 14px;
   border: none;
-  border-radius: 6px;
-  background: #06c755;
-  color: #fff;
-  font-size: 16px;
+  border-radius: 8px;
+  background: #007BFF;
+  color: white;
   cursor: pointer;
 }
-#preview {
-  margin-top: 20px;
-  max-width: 100%;
-  border: 1px solid #ccc;
-}
-#historyList {
-  text-align: left;
-  margin: 20px auto;
-  max-width: 400px;
-}
-#historyList li {
-  padding: 5px;
-  border-bottom: 1px solid #ddd;
+
+button:hover {
+  background: #0056b3;
 }
