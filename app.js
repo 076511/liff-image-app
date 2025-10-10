@@ -1,8 +1,7 @@
-// ===== 設定 =====
-const liffId = "2008124621-9gEeG5K6"; // ← LIFF IDに置き換え
-const gasUrl = "AKfycbxvGTM54JATIaSCvNBuqGCAQXmkXoWYCy3yR3t0LIjqe2Ip0cqcFjU0BjD0auP6mB1TXg"; // ← デプロイ済みGAS URLに置き換え
+// === あなたの環境に合わせて設定 ===
+const liffId = "あなたのLIFF_ID";
+const gasUrl = "https://script.google.com/macros/s/あなたのGASデプロイID/exec"; // 公開URL
 
-// ===== 初期化 =====
 async function main() {
   await liff.init({ liffId });
 
@@ -14,7 +13,7 @@ async function main() {
 
     const profile = await liff.getProfile();
     document.getElementById("profile").innerHTML =
-      "こんにちは、" + profile.displayName + " さん！";
+      `こんにちは、${profile.displayName} さん！`;
     window.currentUserId = profile.userId;
 
     loadHistory();
@@ -28,55 +27,39 @@ async function main() {
   document.getElementById("uploadBtn").addEventListener("click", uploadFile);
 }
 
-// ===== 画像アップロード =====
 async function uploadFile() {
-  const fileInput = document.getElementById("fileInput");
-  const file = fileInput.files[0];
-  if (!file) {
-    alert("画像を選択してください");
-    return;
-  }
+  const file = document.getElementById("fileInput").files[0];
+  if (!file) return alert("画像を選択してください。");
 
-  // プレビュー表示
   document.getElementById("preview").src = URL.createObjectURL(file);
 
-  const reader = new FileReader();
-  reader.onload = async function(evt) {
-    const base64 = evt.target.result.split(",")[1];
+  const formData = new FormData();
+  formData.append("mode", "upload");
+  formData.append("file", file);
+  formData.append("userId", window.currentUserId);
 
-    try {
-      const res = await fetch(gasUrl, {
-        method: "POST",
-        body: JSON.stringify({
-          mode: "upload",
-          image: base64,
-          filename: file.name,
-          contentType: file.type,
-          userId: window.currentUserId
-        }),
-        headers: { "Content-Type": "application/json" }
-      });
+  try {
+    const res = await fetch(gasUrl, {
+      method: "POST",
+      body: formData,
+    });
 
-      const result = await res.json();
-      if (result.status === "success") {
-        alert("アップロード成功！");
-        loadHistory();
-      } else {
-        alert("エラー: " + result.message);
-      }
-    } catch (err) {
-      alert("通信エラー: " + err.message);
+    const result = await res.json();
+    if (result.status === "success") {
+      alert("アップロード成功！");
+      loadHistory();
+    } else {
+      alert("エラー: " + result.message);
     }
-  };
-  reader.readAsDataURL(file);
+  } catch (err) {
+    alert("通信エラー: " + err.message);
+  }
 }
 
-// ===== アップロード履歴読み込み =====
 async function loadHistory() {
   try {
     const res = await fetch(`${gasUrl}?mode=history&userId=${window.currentUserId}`);
     const data = await res.json();
-
     const list = document.getElementById("historyList");
     list.innerHTML = "";
     data.forEach(row => {
@@ -89,5 +72,4 @@ async function loadHistory() {
   }
 }
 
-// ページ読み込み時に main() を実行
 window.onload = main;
